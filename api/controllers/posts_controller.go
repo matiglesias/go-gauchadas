@@ -16,7 +16,7 @@ func NewPostsController(postsService *services.PostsService) *PostsController {
 }
 
 func (pc *PostsController) GetAll(w http.ResponseWriter, r *http.Request) (interface{}, error) {
-	return nil, nil
+	return pc.postsService.GetAll()
 }
 
 func (pc *PostsController) Create(w http.ResponseWriter, r *http.Request) (interface{}, error) {
