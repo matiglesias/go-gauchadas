@@ -1,16 +1,17 @@
 package models
 
 import (
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type Post struct {
+type Comment struct {
 	ID        primitive.ObjectID `bson:"_id,omitempty"`
-	Title     string             `bson:"title,omitempty"`
-	Body      string             `bson:"body,omitempty"`
-	Picture   string             `bson:"picture,omitempty"`
+	Content   string             `bson:"content,omitempty"`
 	UserID    primitive.ObjectID `bson:"userID,omitempty"`
+	PostID    primitive.ObjectID `bson:"postID,omitempty"`
+	CommentID primitive.ObjectID `bson:"commentID,omitempty"`
 	CreatedAt time.Time          `bson:"createdAt,omitempty"`
 	UpdatedAt time.Time          `bson:"updatedAt,omitempty"`
 	DeletedAt time.Time          `bson:"deletedAt,omitempty"`
