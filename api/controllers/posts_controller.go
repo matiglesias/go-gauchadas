@@ -15,32 +15,42 @@ func NewPostsController(postsService *services.PostsService) *PostsController {
 		postsService: postsService}
 }
 
-func (pc *PostsController) GetAll(w http.ResponseWriter, r *http.Request) {
+func (pc *PostsController) GetAll(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+	return nil, nil
 }
 
-func (pc *PostsController) Create(w http.ResponseWriter, r *http.Request) {
+func (pc *PostsController) Create(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+	return nil, nil
 }
 
-func (pc *PostsController) GetByID(w http.ResponseWriter, r *http.Request) {
+func (pc *PostsController) GetByID(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+	return nil, nil
 }
 
-func (pc *PostsController) Edit(w http.ResponseWriter, r *http.Request) {
+func (pc *PostsController) Edit(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+	return nil, nil
 }
 
-func (pc *PostsController) Delete(w http.ResponseWriter, r *http.Request) {
+func (pc *PostsController) Delete(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+	return nil, nil
 }
 
-func (pc *PostsController) GetPostsComments(w http.ResponseWriter, r *http.Request) {
+func (pc *PostsController) GetComments(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+	return nil, nil
 }
 
-func (pc *PostsController) CreateMainPostsComment(w http.ResponseWriter, r *http.Request) {
+func (pc *PostsController) CreateMainComment(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+	return nil, nil
 }
 
-func (pc *PostsController) CreateSecondaryPostsComment(w http.ResponseWriter, r *http.Request) {
+func (pc *PostsController) CreateSecondaryComment(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+	return nil, nil
 }
 
-func (pc *PostsController) EditPostComment(w http.ResponseWriter, r *http.Request) {
+func (pc *PostsController) EditComment(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+	return nil, nil
 }
 
-func (pc *PostsController) DeletePostComment(w http.ResponseWriter, r *http.Request) {
+func (pc *PostsController) DeleteComment(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+	return nil, nil
 }

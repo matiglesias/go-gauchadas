@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/gauchadas/api/services"
-
 	"github.com/gauchadas/api/controllers"
+	"github.com/gauchadas/api/middlewares"
+	"github.com/gauchadas/api/services"
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
@@ -38,19 +38,19 @@ func main() {
 	router := mux.NewRouter()
 
 	//Posts routes
-	router.HandleFunc("/api/posts", postsController.GetAll).Methods("GET")
-	router.HandleFunc("/api/posts", postsController.Create).Methods("POST")
+	router.HandleFunc("/api/posts", middlewares.JSON(postsController.GetAll)).Methods("GET")
+	router.HandleFunc("/api/posts", middlewares.JSON(postsController.Create)).Methods("POST")
 
-	router.HandleFunc("/api/posts/{id}", postsController.GetByID).Methods("GET")
-	router.HandleFunc("/api/posts/{id}", postsController.Edit).Methods("PUT")
-	router.HandleFunc("/api/posts/{id}", postsController.Delete).Methods("DELETE")
+	router.HandleFunc("/api/posts/{id}", middlewares.JSON(postsController.GetByID)).Methods("GET")
+	router.HandleFunc("/api/posts/{id}", middlewares.JSON(postsController.Edit)).Methods("PUT")
+	router.HandleFunc("/api/posts/{id}", middlewares.JSON(postsController.Delete)).Methods("DELETE")
 
-	router.HandleFunc("/api/posts/{id}/comments", postsController.GetPostsComments).Methods("GET")
-	router.HandleFunc("/api/posts/{id}/comments", postsController.CreateMainPostsComment).Methods("POST")
+	router.HandleFunc("/api/posts/{id}/comments", middlewares.JSON(postsController.GetComments)).Methods("GET")
+	router.HandleFunc("/api/posts/{id}/comments", middlewares.JSON(postsController.CreateMainComment)).Methods("POST")
 
-	router.HandleFunc("/api/posts/{id}/comments/{commentID}", postsController.CreateSecondaryPostsComment).Methods("POST")
-	router.HandleFunc("/api/posts/{id}/comments/{commentID}", postsController.EditPostComment).Methods("PUT")
-	router.HandleFunc("/api/posts/{id}/comments/{commentID}", postsController.DeletePostComment).Methods("DELETE")
+	router.HandleFunc("/api/posts/{id}/comments/{commentID}", middlewares.JSON(postsController.CreateSecondaryComment)).Methods("POST")
+	router.HandleFunc("/api/posts/{id}/comments/{commentID}", middlewares.JSON(postsController.EditComment)).Methods("PUT")
+	router.HandleFunc("/api/posts/{id}/comments/{commentID}", middlewares.JSON(postsController.DeleteComment)).Methods("DELETE")
 
 	log.Printf("Listening server at %s...\n", os.Getenv("SERVER_URL"))
 	http.ListenAndServe(os.Getenv("SERVER_URL"), router)
