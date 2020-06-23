@@ -2,8 +2,10 @@ package services
 
 import (
 	"context"
+	"errors"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -35,4 +37,25 @@ func (ps *PostsService) GetAll() (interface{}, error) {
 		return nil, err
 	}
 	return results, nil
+}
+
+func (ps *PostsService) GetByID(postID string) (interface{}, error) {
+	id, err := primitive.ObjectIDFromHex(postID)
+	if err != nil {
+		return nil, errors.New("Identificador de post invalido.")
+	}
+
+	filter := bson.D{
+		{"_id", id},
+		{"deletedAt", bson.D{
+			{"$exists", false},
+		}},
+	}
+	var post bson.M
+	err = ps.postsCollection.FindOne(context.TODO(), filter).Decode(&post)
+	if err != nil {
+		return nil, err
+	}
+	// Must return Picture too
+	return post, nil
 }

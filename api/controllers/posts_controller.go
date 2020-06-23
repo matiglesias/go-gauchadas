@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gauchadas/api/services"
+	"github.com/gorilla/mux"
 )
 
 type PostsController struct {
@@ -24,7 +25,8 @@ func (pc *PostsController) Create(w http.ResponseWriter, r *http.Request) (inter
 }
 
 func (pc *PostsController) GetByID(w http.ResponseWriter, r *http.Request) (interface{}, error) {
-	return nil, nil
+	postID := mux.Vars(r)["id"]
+	return pc.postsService.GetByID(postID)
 }
 
 func (pc *PostsController) Edit(w http.ResponseWriter, r *http.Request) (interface{}, error) {
