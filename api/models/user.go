@@ -1,8 +1,6 @@
 package models
 
 import (
-	"time"
-
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -12,7 +10,7 @@ type User struct {
 	Surname   string             `bson:"surname,omitempty"`
 	Email     string             `bson:"email,omitempty"`
 	Password  string             `bson:"password,omitempty"`
-	CreatedAt time.Time          `bson:"createdAt,omitempty"`
-	UpdatedAt time.Time          `bson:"updatedAt,omitempty"`
-	DeletedAt time.Time          `bson:"deletedAt,omitempty"`
+	CreatedAt primitive.DateTime `bson:"createdAt,omitempty"`
+	UpdatedAt primitive.DateTime `bson:"updatedAt,omitempty"`
+	DeletedAt primitive.DateTime `bson:"deletedAt,omitempty"`
 }
