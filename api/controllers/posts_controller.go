@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"io/ioutil"
 	"net/http"
 
 	"github.com/gauchadas/api/services"
@@ -21,7 +22,11 @@ func (pc *PostsController) GetAll(w http.ResponseWriter, r *http.Request) (inter
 }
 
 func (pc *PostsController) Create(w http.ResponseWriter, r *http.Request) (interface{}, error) {
-	return nil, nil
+	rBody, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
+	return pc.postsService.Create(rBody)
 }
 
 func (pc *PostsController) GetByID(w http.ResponseWriter, r *http.Request) (interface{}, error) {

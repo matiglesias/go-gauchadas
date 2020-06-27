@@ -4,7 +4,12 @@ import (
 	"context"
 	"errors"
 
+	"encoding/json"
+	"time"
+
 	"go.mongodb.org/mongo-driver/bson"
+
+	"github.com/gauchadas/api/models"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -37,6 +42,21 @@ func (ps *PostsService) GetAll() (interface{}, error) {
 		return nil, err
 	}
 	return results, nil
+}
+
+func (ps *PostsService) Create(data []byte) (interface{}, error) {
+	var p models.Post
+	err := json.Unmarshal(data, &p)
+	if err != nil {
+		return nil, err
+	}
+	p.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
+
+	insertResult, err := ps.postsCollection.InsertOne(context.TODO(), p)
+	if err != nil {
+		return nil, err
+	}
+	return insertResult, nil
 }
 
 func (ps *PostsService) GetByID(postID string) (interface{}, error) {
