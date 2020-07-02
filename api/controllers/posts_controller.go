@@ -1,12 +1,10 @@
 package controllers
 
 import (
+	"io/ioutil"
 	"net/http"
-	"time"
 
-	"github.com/gauchadas/api/models"
 	"github.com/gauchadas/api/services"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type PostsController struct {
@@ -23,20 +21,11 @@ func (pc *PostsController) GetAll(w http.ResponseWriter, r *http.Request) (inter
 }
 
 func (pc *PostsController) Create(w http.ResponseWriter, r *http.Request) (interface{}, error) {
-	var p models.Post
-	// Memory read limit: 1MB
-	err := r.ParseMultipartForm(1048576)
+	rBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return nil, err
 	}
-
-	p.Title = r.FormValue("title")
-	p.Body = r.FormValue("body")
-	// TODO get picture
-	// TODO get userID
-	p.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
-
-	return pc.postsService.Create(&p)
+	return pc.postsService.Create(rBody)
 }
 
 func (pc *PostsController) GetByID(w http.ResponseWriter, r *http.Request) (interface{}, error) {
