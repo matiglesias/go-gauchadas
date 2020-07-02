@@ -2,8 +2,11 @@ package services
 
 import (
 	"context"
+	"encoding/json"
+	"time"
 
 	"github.com/gauchadas/api/models"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -16,29 +19,17 @@ func NewPostsService(postsCollection *mongo.Collection) *PostsService {
 		postsCollection: postsCollection}
 }
 
-func (ps *PostsService) Create(p *models.Post) (interface{}, error) {
+func (ps *PostsService) Create(data []byte) (interface{}, error) {
+	var p models.Post
+	err := json.Unmarshal(data, &p)
+	if err != nil {
+		return nil, err
+	}
+	p.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
+
 	insertResult, err := ps.postsCollection.InsertOne(context.TODO(), p)
 	if err != nil {
 		return nil, err
 	}
-
-	/* 	ctx := context.TODO()
-	   	cursor, err := ps.postsCollection.Find(ctx, bson.D{{}})
-	   	if err != nil {
-	   		return nil, err
-	   	}
-	   	defer cursor.Close(ctx)
-
-	   	var results []models.Post
-	   	err = cursor.All(ctx, &results)
-	   	if err != nil {
-	   		return nil, err
-	   	}
-	   		for _, result := range results {
-	   		fmt.Println("EL BODY ES " + result.Body)
-	   		fmt.Println("EL TITULO ES " + result.Title)
-	   		fmt.Println("LA HORA ES " + result.CreatedAt.Time().String())
-	   		fmt.Println("")
-	   	} */
-	return insertResult.InsertedID, nil
+	return insertResult, nil
 }
