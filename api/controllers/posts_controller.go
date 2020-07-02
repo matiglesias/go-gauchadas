@@ -47,7 +47,12 @@ func (pc *PostsController) GetComments(w http.ResponseWriter, r *http.Request) (
 }
 
 func (pc *PostsController) CreateMainComment(w http.ResponseWriter, r *http.Request) (interface{}, error) {
-	return nil, nil
+	rBody, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
+	postID := mux.Vars(r)["id"]
+	return pc.postsService.CreateMainComment(rBody, postID)
 }
 
 func (pc *PostsController) CreateSecondaryComment(w http.ResponseWriter, r *http.Request) (interface{}, error) {

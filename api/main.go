@@ -31,8 +31,9 @@ func main() {
 
 	database := client.Database("gauchadas")
 	postsCollection := database.Collection("posts")
+	commentsCollection := database.Collection("comments")
 
-	postsService := services.NewPostsService(postsCollection)
+	postsService := services.NewPostsService(postsCollection, commentsCollection)
 	postsController := controllers.NewPostsController(postsService)
 
 	router := mux.NewRouter()
