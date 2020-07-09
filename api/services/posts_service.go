@@ -62,6 +62,40 @@ func (ps *PostsService) CreateMainComment(data []byte, postID string) (interface
 	return insertResult, nil
 }
 
+func (ps *PostsService) CreateSecondaryComment(data []byte, postID string, mainCommentID string) (interface{}, error) {
+	// Check if post exists
+	pID, err := ps.postExists(postID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if main comment exists
+	mcID, isMain, err := ps.commentExists(mainCommentID)
+	if err != nil {
+		return nil, err
+	}
+	if !isMain {
+		return nil, errors.New("Not a main comment")
+	}
+
+	// Fill model and store secondary comment
+	var c models.Comment
+	err = json.Unmarshal(data, &c)
+	if err != nil {
+		return nil, err
+	}
+	// ¡OJO! PODRIAN MANDAR JASON CON deletedAt U OTRO CAMPO, Y HARIA CAGADAS.
+	c.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
+	c.PostID = *pID
+	c.CommentID = *mcID
+
+	insertResult, err := ps.commentsCollection.InsertOne(context.TODO(), c)
+	if err != nil {
+		return nil, err
+	}
+	return insertResult, nil
+}
+
 func (ps *PostsService) GetAll() (interface{}, error) {
 	ctx := context.TODO()
 	filter := bson.D{
@@ -117,4 +151,49 @@ func (ps *PostsService) GetByID(postID string) (interface{}, error) {
 	}
 	// Must return Picture too
 	return post, nil
+}
+
+// If post exists, returns postId as an objectID.
+func (ps *PostsService) postExists(postID string) (*primitive.ObjectID, error) {
+	pID, err := primitive.ObjectIDFromHex(postID)
+	if err != nil {
+		return nil, err
+	}
+	var post bson.M
+	filter := bson.D{
+		{"_id", pID},
+		{"deletedAt", bson.D{
+			{"$exists", false},
+		}},
+	}
+	err = ps.postsCollection.FindOne(context.TODO(), filter).Decode(&post)
+	if err != nil {
+		return nil, err
+	}
+	return &pID, nil
+}
+
+// If comment exists, returns commentID as an objectID. Boolean will be true if it's a main comment.
+func (ps *PostsService) commentExists(commentID string) (*primitive.ObjectID, bool, error) {
+	cID, err := primitive.ObjectIDFromHex(commentID)
+	if err != nil {
+		return nil, false, err
+	}
+	var comment bson.M
+	filter := bson.D{
+		{"_id", cID},
+		{"deletedAt", bson.D{
+			{"$exists", false},
+		}},
+	}
+
+	err = ps.commentsCollection.FindOne(context.TODO(), filter).Decode(&comment)
+	if err != nil {
+		return nil, false, err
+	}
+
+	if comment["commentID"] == nil {
+		return &cID, true, nil
+	}
+	return &cID, false, nil
 }
