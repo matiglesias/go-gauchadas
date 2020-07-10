@@ -35,7 +35,12 @@ func (pc *PostsController) GetByID(w http.ResponseWriter, r *http.Request) (inte
 }
 
 func (pc *PostsController) Edit(w http.ResponseWriter, r *http.Request) (interface{}, error) {
-	return nil, nil
+	rBody, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
+	postID := mux.Vars(r)["id"]
+	return pc.postsService.Edit(rBody, postID)
 }
 
 func (pc *PostsController) Delete(w http.ResponseWriter, r *http.Request) (interface{}, error) {

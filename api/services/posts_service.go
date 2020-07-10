@@ -197,3 +197,31 @@ func (ps *PostsService) commentExists(commentID string) (*primitive.ObjectID, bo
 	}
 	return &cID, false, nil
 }
+
+func (ps *PostsService) Edit(data []byte, postID string) (interface{}, error) {
+	pID, err := ps.postExists(postID)
+	if err != nil {
+		return nil, err
+	}
+
+	var p models.Post
+	err = json.Unmarshal(data, &p)
+	if err != nil {
+		return nil, err
+	}
+
+	update := bson.D{
+		{"$set", p},
+		{"$currentDate", bson.D{
+			{"updatedAt", true},
+		}},
+	}
+	filter := bson.D{
+		{"_id", pID},
+	}
+	updateResult, err := ps.postsCollection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		return nil, err
+	}
+	return updateResult, nil
+}
