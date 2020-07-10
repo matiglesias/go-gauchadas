@@ -287,3 +287,36 @@ func (ps *PostsService) GetComments(postID string) (interface{}, error) {
 	}
 	return results, nil
 }
+
+func (ps *PostsService) DeleteComment(postID string, commentID string) (interface{}, error) {
+	_, err := ps.postExists(postID)
+	if err != nil {
+		return nil, err
+	}
+
+	cID, err := primitive.ObjectIDFromHex(commentID)
+	filter := bson.D{
+		{"_id", cID},
+	}
+	deleteByKeyResult, err := ps.commentsCollection.DeleteOne(context.TODO(), filter)
+	if err != nil {
+		return nil, err
+	}
+	if deleteByKeyResult.DeletedCount == 0 {
+		return nil, errors.New("Comment not found.")
+	}
+
+	filter = bson.D{
+		{"commentID", cID},
+	}
+	deleteByForeingKeyResult, err := ps.commentsCollection.DeleteMany(context.TODO(), filter)
+	if err != nil {
+		return nil, err
+	}
+
+	deleteResults := bson.D{
+		{"deletedByItsKey", deleteByKeyResult},
+		{"deletedByForeingKey", deleteByForeingKeyResult},
+	}
+	return deleteResults, nil
+}
