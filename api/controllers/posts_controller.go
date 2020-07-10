@@ -82,5 +82,7 @@ func (pc *PostsController) EditComment(w http.ResponseWriter, r *http.Request) (
 }
 
 func (pc *PostsController) DeleteComment(w http.ResponseWriter, r *http.Request) (interface{}, error) {
-	return nil, nil
+	postID := mux.Vars(r)["id"]
+	commentID := mux.Vars(r)["commentID"]
+	return pc.postsService.DeleteComment(postID, commentID)
 }
