@@ -48,7 +48,8 @@ func (pc *PostsController) Delete(w http.ResponseWriter, r *http.Request) (inter
 }
 
 func (pc *PostsController) GetComments(w http.ResponseWriter, r *http.Request) (interface{}, error) {
-	return nil, nil
+	postID := mux.Vars(r)["id"]
+	return pc.postsService.GetComments(postID)
 }
 
 func (pc *PostsController) CreateMainComment(w http.ResponseWriter, r *http.Request) (interface{}, error) {

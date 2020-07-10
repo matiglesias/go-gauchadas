@@ -225,3 +225,31 @@ func (ps *PostsService) Edit(data []byte, postID string) (interface{}, error) {
 	}
 	return updateResult, nil
 }
+
+func (ps *PostsService) GetComments(postID string) (interface{}, error) {
+	pID, err := ps.postExists(postID)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.TODO()
+	filter := bson.D{
+		{"postID", pID},
+		{"deletedAt", bson.D{
+			{"$exists", false},
+		}},
+	}
+
+	cursor, err := ps.commentsCollection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var results []bson.M
+	err = cursor.All(ctx, &results)
+	if err != nil {
+		return nil, err
+	}
+	return results, nil
+}
