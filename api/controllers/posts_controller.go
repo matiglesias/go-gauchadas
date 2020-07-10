@@ -72,7 +72,13 @@ func (pc *PostsController) CreateSecondaryComment(w http.ResponseWriter, r *http
 }
 
 func (pc *PostsController) EditComment(w http.ResponseWriter, r *http.Request) (interface{}, error) {
-	return nil, nil
+	rBody, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
+	postID := mux.Vars(r)["id"]
+	commentID := mux.Vars(r)["commentID"]
+	return pc.postsService.EditComment(rBody, postID, commentID)
 }
 
 func (pc *PostsController) DeleteComment(w http.ResponseWriter, r *http.Request) (interface{}, error) {

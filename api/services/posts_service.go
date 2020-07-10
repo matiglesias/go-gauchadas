@@ -226,6 +226,40 @@ func (ps *PostsService) Edit(data []byte, postID string) (interface{}, error) {
 	return updateResult, nil
 }
 
+func (ps *PostsService) EditComment(data []byte, postID string, commentID string) (interface{}, error) {
+	_, err := ps.postExists(postID)
+	if err != nil {
+		return nil, err
+	}
+
+	cID, _, err := ps.commentExists(commentID)
+	if err != nil {
+		return nil, err
+	}
+
+	var c models.Comment
+	err = json.Unmarshal(data, &c)
+	if err != nil {
+		return nil, err
+	}
+
+	update := bson.D{
+		{"$set", c},
+		{"$currentDate", bson.D{
+			{"updatedAt", true},
+		}},
+	}
+	filter := bson.D{
+		{"_id", cID},
+	}
+	updateResult, err := ps.commentsCollection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		return nil, err
+	}
+	return updateResult, nil
+	return nil, nil
+}
+
 func (ps *PostsService) GetComments(postID string) (interface{}, error) {
 	pID, err := ps.postExists(postID)
 	if err != nil {
