@@ -24,6 +24,119 @@ func NewPostsService(postsCollection *mongo.Collection, commentsCollection *mong
 		commentsCollection: commentsCollection}
 }
 
+func (ps *PostsService) GetAll() (interface{}, error) {
+	ctx := context.TODO()
+	filter := bson.D{
+		{"deletedAt", bson.D{
+			{"$exists", false},
+		}},
+	}
+	cursor, err := ps.postsCollection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var results []bson.M
+	err = cursor.All(ctx, &results)
+	if err != nil {
+		return nil, err
+	}
+	return results, nil
+}
+
+func (ps *PostsService) Create(data []byte) (interface{}, error) {
+	var p models.Post
+	err := json.Unmarshal(data, &p)
+	if err != nil {
+		return nil, err
+	}
+	p.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
+
+	insertResult, err := ps.postsCollection.InsertOne(context.TODO(), p)
+	if err != nil {
+		return nil, err
+	}
+	return insertResult, nil
+}
+
+func (ps *PostsService) GetByID(postID string) (interface{}, error) {
+	id, err := primitive.ObjectIDFromHex(postID)
+	if err != nil {
+		return nil, errors.New("Identificador de post invalido.")
+	}
+
+	filter := bson.D{
+		{"_id", id},
+		{"deletedAt", bson.D{
+			{"$exists", false},
+		}},
+	}
+	var post bson.M
+	err = ps.postsCollection.FindOne(context.TODO(), filter).Decode(&post)
+	if err != nil {
+		return nil, err
+	}
+	// Must return Picture too
+	return post, nil
+}
+
+func (ps *PostsService) Edit(data []byte, postID string) (interface{}, error) {
+	pID, err := ps.postExists(postID)
+	if err != nil {
+		return nil, err
+	}
+
+	var p models.Post
+	err = json.Unmarshal(data, &p)
+	if err != nil {
+		return nil, err
+	}
+
+	update := bson.D{
+		{"$set", p},
+		{"$currentDate", bson.D{
+			{"updatedAt", true},
+		}},
+	}
+	filter := bson.D{
+		{"_id", pID},
+	}
+	updateResult, err := ps.postsCollection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		return nil, err
+	}
+	return updateResult, nil
+}
+
+func (ps *PostsService) GetComments(postID string) (interface{}, error) {
+	pID, err := ps.postExists(postID)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.TODO()
+	filter := bson.D{
+		{"postID", pID},
+		{"deletedAt", bson.D{
+			{"$exists", false},
+		}},
+	}
+
+	cursor, err := ps.commentsCollection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var results []bson.M
+	err = cursor.All(ctx, &results)
+	if err != nil {
+		return nil, err
+	}
+	return results, nil
+}
+
 func (ps *PostsService) CreateMainComment(data []byte, postID string) (interface{}, error) {
 	pID, err := primitive.ObjectIDFromHex(postID)
 	if err != nil {
@@ -96,61 +209,70 @@ func (ps *PostsService) CreateSecondaryComment(data []byte, postID string, mainC
 	return insertResult, nil
 }
 
-func (ps *PostsService) GetAll() (interface{}, error) {
-	ctx := context.TODO()
-	filter := bson.D{
-		{"deletedAt", bson.D{
-			{"$exists", false},
+func (ps *PostsService) EditComment(data []byte, postID string, commentID string) (interface{}, error) {
+	_, err := ps.postExists(postID)
+	if err != nil {
+		return nil, err
+	}
+
+	cID, _, err := ps.commentExists(commentID)
+	if err != nil {
+		return nil, err
+	}
+
+	var c models.Comment
+	err = json.Unmarshal(data, &c)
+	if err != nil {
+		return nil, err
+	}
+
+	update := bson.D{
+		{"$set", c},
+		{"$currentDate", bson.D{
+			{"updatedAt", true},
 		}},
 	}
-	cursor, err := ps.postsCollection.Find(ctx, filter)
-	if err != nil {
-		return nil, err
-	}
-	defer cursor.Close(ctx)
-
-	var results []bson.M
-	err = cursor.All(ctx, &results)
-	if err != nil {
-		return nil, err
-	}
-	return results, nil
-}
-
-func (ps *PostsService) Create(data []byte) (interface{}, error) {
-	var p models.Post
-	err := json.Unmarshal(data, &p)
-	if err != nil {
-		return nil, err
-	}
-	p.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
-
-	insertResult, err := ps.postsCollection.InsertOne(context.TODO(), p)
-	if err != nil {
-		return nil, err
-	}
-	return insertResult, nil
-}
-
-func (ps *PostsService) GetByID(postID string) (interface{}, error) {
-	id, err := primitive.ObjectIDFromHex(postID)
-	if err != nil {
-		return nil, errors.New("Identificador de post invalido.")
-	}
-
 	filter := bson.D{
-		{"_id", id},
-		{"deletedAt", bson.D{
-			{"$exists", false},
-		}},
+		{"_id", cID},
 	}
-	var post bson.M
-	err = ps.postsCollection.FindOne(context.TODO(), filter).Decode(&post)
+	updateResult, err := ps.commentsCollection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		return nil, err
 	}
-	// Must return Picture too
-	return post, nil
+	return updateResult, nil
+}
+
+func (ps *PostsService) DeleteComment(postID string, commentID string) (interface{}, error) {
+	_, err := ps.postExists(postID)
+	if err != nil {
+		return nil, err
+	}
+
+	cID, err := primitive.ObjectIDFromHex(commentID)
+	filter := bson.D{
+		{"_id", cID},
+	}
+	deleteByKeyResult, err := ps.commentsCollection.DeleteOne(context.TODO(), filter)
+	if err != nil {
+		return nil, err
+	}
+	if deleteByKeyResult.DeletedCount == 0 {
+		return nil, errors.New("Comment not found.")
+	}
+
+	filter = bson.D{
+		{"commentID", cID},
+	}
+	deleteByForeingKeyResult, err := ps.commentsCollection.DeleteMany(context.TODO(), filter)
+	if err != nil {
+		return nil, err
+	}
+
+	deleteResults := bson.D{
+		{"deletedByItsKey", deleteByKeyResult},
+		{"deletedByForeingKey", deleteByForeingKeyResult},
+	}
+	return deleteResults, nil
 }
 
 // If post exists, returns postId as an objectID.
@@ -196,127 +318,4 @@ func (ps *PostsService) commentExists(commentID string) (*primitive.ObjectID, bo
 		return &cID, true, nil
 	}
 	return &cID, false, nil
-}
-
-func (ps *PostsService) Edit(data []byte, postID string) (interface{}, error) {
-	pID, err := ps.postExists(postID)
-	if err != nil {
-		return nil, err
-	}
-
-	var p models.Post
-	err = json.Unmarshal(data, &p)
-	if err != nil {
-		return nil, err
-	}
-
-	update := bson.D{
-		{"$set", p},
-		{"$currentDate", bson.D{
-			{"updatedAt", true},
-		}},
-	}
-	filter := bson.D{
-		{"_id", pID},
-	}
-	updateResult, err := ps.postsCollection.UpdateOne(context.TODO(), filter, update)
-	if err != nil {
-		return nil, err
-	}
-	return updateResult, nil
-}
-
-func (ps *PostsService) EditComment(data []byte, postID string, commentID string) (interface{}, error) {
-	_, err := ps.postExists(postID)
-	if err != nil {
-		return nil, err
-	}
-
-	cID, _, err := ps.commentExists(commentID)
-	if err != nil {
-		return nil, err
-	}
-
-	var c models.Comment
-	err = json.Unmarshal(data, &c)
-	if err != nil {
-		return nil, err
-	}
-
-	update := bson.D{
-		{"$set", c},
-		{"$currentDate", bson.D{
-			{"updatedAt", true},
-		}},
-	}
-	filter := bson.D{
-		{"_id", cID},
-	}
-	updateResult, err := ps.commentsCollection.UpdateOne(context.TODO(), filter, update)
-	if err != nil {
-		return nil, err
-	}
-	return updateResult, nil
-	return nil, nil
-}
-
-func (ps *PostsService) GetComments(postID string) (interface{}, error) {
-	pID, err := ps.postExists(postID)
-	if err != nil {
-		return nil, err
-	}
-
-	ctx := context.TODO()
-	filter := bson.D{
-		{"postID", pID},
-		{"deletedAt", bson.D{
-			{"$exists", false},
-		}},
-	}
-
-	cursor, err := ps.commentsCollection.Find(ctx, filter)
-	if err != nil {
-		return nil, err
-	}
-	defer cursor.Close(ctx)
-
-	var results []bson.M
-	err = cursor.All(ctx, &results)
-	if err != nil {
-		return nil, err
-	}
-	return results, nil
-}
-
-func (ps *PostsService) DeleteComment(postID string, commentID string) (interface{}, error) {
-	_, err := ps.postExists(postID)
-	if err != nil {
-		return nil, err
-	}
-
-	cID, err := primitive.ObjectIDFromHex(commentID)
-	filter := bson.D{
-		{"_id", cID},
-	}
-	deleteByKeyResult, err := ps.commentsCollection.DeleteOne(context.TODO(), filter)
-	if err != nil {
-		return nil, err
-	}
-	if deleteByKeyResult.DeletedCount == 0 {
-		return nil, errors.New("Comment not found.")
-	}
-
-	filter = bson.D{
-		{"commentID", cID},
-	}
-	deleteByForeingKeyResult, err := ps.commentsCollection.DeleteMany(context.TODO(), filter)
-	if err != nil {
-		return nil, err
-	}
-
-	deleteResults := bson.D{
-		{"deletedByItsKey", deleteByKeyResult},
-		{"deletedByForeingKey", deleteByForeingKeyResult},
-	}
-	return deleteResults, nil
 }
