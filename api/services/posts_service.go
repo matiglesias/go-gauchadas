@@ -183,11 +183,11 @@ func (ps *PostsService) CreateSecondaryComment(data []byte, postID string, mainC
 	}
 
 	// Check if main comment exists
-	mcID, isMain, err := ps.commentExists(mainCommentID)
+	mainComment, err := ps.commentExists(mainCommentID)
 	if err != nil {
 		return nil, err
 	}
-	if !isMain {
+	if !mainComment.CommentID.IsZero() {
 		return nil, errors.New("Not a main comment")
 	}
 
@@ -200,7 +200,7 @@ func (ps *PostsService) CreateSecondaryComment(data []byte, postID string, mainC
 	// ¡OJO! PODRIAN MANDAR JASON CON deletedAt U OTRO CAMPO, Y HARIA CAGADAS.
 	c.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
 	c.PostID = *pID
-	c.CommentID = *mcID
+	c.CommentID = mainComment.ID
 
 	insertResult, err := ps.commentsCollection.InsertOne(context.TODO(), c)
 	if err != nil {
@@ -215,7 +215,7 @@ func (ps *PostsService) EditComment(data []byte, postID string, commentID string
 		return nil, err
 	}
 
-	cID, _, err := ps.commentExists(commentID)
+	comment, err := ps.commentExists(commentID)
 	if err != nil {
 		return nil, err
 	}
@@ -233,7 +233,7 @@ func (ps *PostsService) EditComment(data []byte, postID string, commentID string
 		}},
 	}
 	filter := bson.D{
-		{"_id", cID},
+		{"_id", comment.ID},
 	}
 	updateResult, err := ps.commentsCollection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
@@ -295,27 +295,22 @@ func (ps *PostsService) postExists(postID string) (*primitive.ObjectID, error) {
 	return &pID, nil
 }
 
-// If comment exists, returns commentID as an objectID. Boolean will be true if it's a main comment.
-func (ps *PostsService) commentExists(commentID string) (*primitive.ObjectID, bool, error) {
+// If comment exists, returns comment as a Comment model.
+func (ps *PostsService) commentExists(commentID string) (*models.Comment, error) {
 	cID, err := primitive.ObjectIDFromHex(commentID)
 	if err != nil {
-		return nil, false, err
+		return nil, err
 	}
-	var comment bson.M
+	var comment models.Comment
 	filter := bson.D{
 		{"_id", cID},
 		{"deletedAt", bson.D{
 			{"$exists", false},
 		}},
 	}
-
 	err = ps.commentsCollection.FindOne(context.TODO(), filter).Decode(&comment)
 	if err != nil {
-		return nil, false, err
+		return nil, err
 	}
-
-	if comment["commentID"] == nil {
-		return &cID, true, nil
-	}
-	return &cID, false, nil
+	return &comment, nil
 }
