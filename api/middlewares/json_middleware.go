@@ -6,9 +6,9 @@ import (
 	"net/http"
 )
 
-func JSON(endpoint func(w http.ResponseWriter, r *http.Request) (interface{}, error)) http.HandlerFunc {
+func JSON(endpoint func(r *http.Request) (interface{}, error)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		result, err := endpoint(w, r)
+		result, err := endpoint(r)
 		if err != nil {
 			handleError(err, w)
 			return
