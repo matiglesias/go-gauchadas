@@ -17,11 +17,11 @@ func NewPostsController(postsService *services.PostsService) *PostsController {
 		postsService: postsService}
 }
 
-func (pc *PostsController) GetAll(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+func (pc *PostsController) GetAll(r *http.Request) (interface{}, error) {
 	return pc.postsService.GetAll()
 }
 
-func (pc *PostsController) Create(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+func (pc *PostsController) Create(r *http.Request) (interface{}, error) {
 	rBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return nil, err
@@ -29,12 +29,12 @@ func (pc *PostsController) Create(w http.ResponseWriter, r *http.Request) (inter
 	return pc.postsService.Create(rBody)
 }
 
-func (pc *PostsController) GetByID(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+func (pc *PostsController) GetByID(r *http.Request) (interface{}, error) {
 	postID := mux.Vars(r)["id"]
 	return pc.postsService.GetByID(postID)
 }
 
-func (pc *PostsController) Edit(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+func (pc *PostsController) Edit(r *http.Request) (interface{}, error) {
 	rBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return nil, err
@@ -43,16 +43,16 @@ func (pc *PostsController) Edit(w http.ResponseWriter, r *http.Request) (interfa
 	return pc.postsService.Edit(rBody, postID)
 }
 
-func (pc *PostsController) Delete(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+func (pc *PostsController) Delete(r *http.Request) (interface{}, error) {
 	return nil, nil
 }
 
-func (pc *PostsController) GetComments(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+func (pc *PostsController) GetComments(r *http.Request) (interface{}, error) {
 	postID := mux.Vars(r)["id"]
 	return pc.postsService.GetComments(postID)
 }
 
-func (pc *PostsController) CreateMainComment(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+func (pc *PostsController) CreateMainComment(r *http.Request) (interface{}, error) {
 	rBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return nil, err
@@ -61,7 +61,7 @@ func (pc *PostsController) CreateMainComment(w http.ResponseWriter, r *http.Requ
 	return pc.postsService.CreateMainComment(rBody, postID)
 }
 
-func (pc *PostsController) CreateSecondaryComment(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+func (pc *PostsController) CreateSecondaryComment(r *http.Request) (interface{}, error) {
 	rBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return nil, err
@@ -71,7 +71,7 @@ func (pc *PostsController) CreateSecondaryComment(w http.ResponseWriter, r *http
 	return pc.postsService.CreateSecondaryComment(rBody, postID, mainCommentID)
 }
 
-func (pc *PostsController) EditComment(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+func (pc *PostsController) EditComment(r *http.Request) (interface{}, error) {
 	rBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return nil, err
@@ -81,7 +81,7 @@ func (pc *PostsController) EditComment(w http.ResponseWriter, r *http.Request) (
 	return pc.postsService.EditComment(rBody, postID, commentID)
 }
 
-func (pc *PostsController) DeleteComment(w http.ResponseWriter, r *http.Request) (interface{}, error) {
+func (pc *PostsController) DeleteComment(r *http.Request) (interface{}, error) {
 	postID := mux.Vars(r)["id"]
 	commentID := mux.Vars(r)["commentID"]
 	return pc.postsService.DeleteComment(postID, commentID)
