@@ -44,7 +44,8 @@ func (pc *PostsController) Edit(r *http.Request) (interface{}, error) {
 }
 
 func (pc *PostsController) Delete(r *http.Request) (interface{}, error) {
-	return nil, nil
+	postID := mux.Vars(r)["id"]
+	return pc.postsService.Delete(postID)
 }
 
 func (pc *PostsController) GetComments(r *http.Request) (interface{}, error) {

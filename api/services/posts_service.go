@@ -112,6 +112,37 @@ func (ps *PostsService) Edit(data []byte, postID string) (interface{}, error) {
 	return updateResult, nil
 }
 
+func (ps *PostsService) Delete(postID string) (interface{}, error) {
+	post, err := ps.postExists(postID)
+	if err != nil {
+		return nil, err
+	}
+
+	update := bson.D{
+		{"$currentDate", bson.D{
+			{"deletedAt", true},
+		}},
+	}
+
+	filter := bson.D{{"postID", post.ID}}
+	commentsDeleteResult, err := ps.commentsCollection.UpdateMany(context.TODO(), filter, update)
+	if err != nil {
+		return nil, err
+	}
+
+	filter = bson.D{{"_id", post.ID}}
+	postDeleteResult, err := ps.postsCollection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		return nil, err
+	}
+
+	deleteResults := bson.M{
+		"postDeleteResult":     postDeleteResult,
+		"commentsDeleteResult": commentsDeleteResult,
+	}
+	return deleteResults, nil
+}
+
 func (ps *PostsService) GetComments(postID string) (interface{}, error) {
 	post, err := ps.postExists(postID)
 	if err != nil {
