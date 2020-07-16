@@ -138,21 +138,7 @@ func (ps *PostsService) GetComments(postID string) (interface{}, error) {
 }
 
 func (ps *PostsService) CreateMainComment(data []byte, postID string) (interface{}, error) {
-	pID, err := primitive.ObjectIDFromHex(postID)
-	if err != nil {
-		return nil, err
-	}
-	var post bson.M
-	filter := bson.D{
-		{"_id", pID},
-		{"deletedAt", bson.D{
-			{"$exists", false},
-		}},
-	}
-	err = ps.postsCollection.FindOne(context.TODO(), filter).Decode(&post)
-	if err != nil {
-		return nil, err
-	}
+	post, err := ps.postExists(postID)
 
 	var c models.Comment
 	err = json.Unmarshal(data, &c)
@@ -166,7 +152,7 @@ func (ps *PostsService) CreateMainComment(data []byte, postID string) (interface
 	   		return
 	   	} */
 	c.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
-	c.PostID = pID
+	c.PostID = post.ID
 
 	insertResult, err := ps.commentsCollection.InsertOne(context.TODO(), c)
 	if err != nil {
