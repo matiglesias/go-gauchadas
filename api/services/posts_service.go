@@ -216,8 +216,8 @@ func (ps *PostsService) EditComment(data []byte, postID string, commentID string
 	if err != nil {
 		return nil, err
 	}
-	if c.DeletedAt != 0 || c.UpdatedAt != 0 || c.CreatedAt != 0 {
-		return nil, errors.New("request have an unespected date field")
+	if c.DeletedAt != 0 || c.UpdatedAt != 0 || c.CreatedAt != 0 || !c.CommentID.IsZero() || !c.PostID.IsZero() {
+		return nil, errors.New("request have an unespected field")
 	}
 
 	update := bson.D{
