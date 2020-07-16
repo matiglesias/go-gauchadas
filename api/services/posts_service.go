@@ -235,28 +235,30 @@ func (ps *PostsService) DeleteComment(postID string, commentID string) (interfac
 	}
 
 	cID, err := primitive.ObjectIDFromHex(commentID)
-	filter := bson.D{
-		{"_id", cID},
+	update := bson.D{
+		{"$currentDate", bson.D{
+			{"deletedAt", true}},
+		},
 	}
-	deleteByKeyResult, err := ps.commentsCollection.DeleteOne(context.TODO(), filter)
+
+	filter := bson.D{{"_id", cID}}
+	deleteByKeyResult, err := ps.commentsCollection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		return nil, err
 	}
-	if deleteByKeyResult.DeletedCount == 0 {
-		return nil, errors.New("Comment not found.")
+	if deleteByKeyResult.MatchedCount == 0 {
+		return nil, errors.New("comment not found")
 	}
 
-	filter = bson.D{
-		{"commentID", cID},
-	}
-	deleteByForeingKeyResult, err := ps.commentsCollection.DeleteMany(context.TODO(), filter)
+	filter = bson.D{{"commentID", cID}}
+	deleteByForeingKeyResult, err := ps.commentsCollection.UpdateMany(context.TODO(), filter, update)
 	if err != nil {
 		return nil, err
 	}
 
-	deleteResults := bson.D{
-		{"deletedByItsKey", deleteByKeyResult},
-		{"deletedByForeingKey", deleteByForeingKeyResult},
+	deleteResults := bson.M{
+		"deleteByKeyResult":        deleteByKeyResult,
+		"deleteByForeingKeyResult": deleteByForeingKeyResult,
 	}
 	return deleteResults, nil
 }
