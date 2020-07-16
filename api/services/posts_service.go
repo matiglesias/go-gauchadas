@@ -54,8 +54,8 @@ func (ps *PostsService) Create(data []byte) (interface{}, error) {
 	if p.DeletedAt != 0 || p.UpdatedAt != 0 {
 		return nil, errors.New("request have an unespected date field")
 	}
-	p.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
 
+	p.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
 	insertResult, err := ps.postsCollection.InsertOne(context.TODO(), p)
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func (ps *PostsService) Create(data []byte) (interface{}, error) {
 func (ps *PostsService) GetByID(postID string) (interface{}, error) {
 	id, err := primitive.ObjectIDFromHex(postID)
 	if err != nil {
-		return nil, errors.New("Identificador de post invalido.")
+		return nil, errors.New("identificador de post invalido")
 	}
 
 	filter := bson.D{
@@ -80,7 +80,6 @@ func (ps *PostsService) GetByID(postID string) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	// Must return Picture too
 	return post, nil
 }
 
@@ -126,7 +125,6 @@ func (ps *PostsService) GetComments(postID string) (interface{}, error) {
 			{"$exists", false},
 		}},
 	}
-
 	cursor, err := ps.commentsCollection.Find(ctx, filter)
 	if err != nil {
 		return nil, err
@@ -143,7 +141,9 @@ func (ps *PostsService) GetComments(postID string) (interface{}, error) {
 
 func (ps *PostsService) CreateMainComment(data []byte, postID string) (interface{}, error) {
 	post, err := ps.postExists(postID)
-
+	if err != nil {
+		return nil, err
+	}
 	var c models.Comment
 	err = json.Unmarshal(data, &c)
 	if err != nil {
@@ -155,7 +155,6 @@ func (ps *PostsService) CreateMainComment(data []byte, postID string) (interface
 
 	c.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
 	c.PostID = post.ID
-
 	insertResult, err := ps.commentsCollection.InsertOne(context.TODO(), c)
 	if err != nil {
 		return nil, err
@@ -164,22 +163,18 @@ func (ps *PostsService) CreateMainComment(data []byte, postID string) (interface
 }
 
 func (ps *PostsService) CreateSecondaryComment(data []byte, postID string, mainCommentID string) (interface{}, error) {
-	// Check if post exists
 	post, err := ps.postExists(postID)
 	if err != nil {
 		return nil, err
 	}
-
-	// Check if main comment exists
 	mainComment, err := ps.commentExists(mainCommentID)
 	if err != nil {
 		return nil, err
 	}
 	if !mainComment.CommentID.IsZero() {
-		return nil, errors.New("Not a main comment")
+		return nil, errors.New("not a main comment")
 	}
 
-	// Fill model and store secondary comment
 	var c models.Comment
 	err = json.Unmarshal(data, &c)
 	if err != nil {
@@ -192,7 +187,6 @@ func (ps *PostsService) CreateSecondaryComment(data []byte, postID string, mainC
 	c.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
 	c.PostID = post.ID
 	c.CommentID = mainComment.ID
-
 	insertResult, err := ps.commentsCollection.InsertOne(context.TODO(), c)
 	if err != nil {
 		return nil, err
@@ -205,7 +199,6 @@ func (ps *PostsService) EditComment(data []byte, postID string, commentID string
 	if err != nil {
 		return nil, err
 	}
-
 	comment, err := ps.commentExists(commentID)
 	if err != nil {
 		return nil, err
@@ -239,14 +232,16 @@ func (ps *PostsService) DeleteComment(postID string, commentID string) (interfac
 	if err != nil {
 		return nil, err
 	}
-
 	cID, err := primitive.ObjectIDFromHex(commentID)
+	if err != nil {
+		return nil, err
+	}
+
 	update := bson.D{
 		{"$currentDate", bson.D{
 			{"deletedAt", true}},
 		},
 	}
-
 	filter := bson.D{{"_id", cID}}
 	deleteByKeyResult, err := ps.commentsCollection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
@@ -269,12 +264,13 @@ func (ps *PostsService) DeleteComment(postID string, commentID string) (interfac
 	return deleteResults, nil
 }
 
-// If post exists, returns postId as an objectID.
+// If post exists, returns post as a Post struct.
 func (ps *PostsService) postExists(postID string) (*models.Post, error) {
 	pID, err := primitive.ObjectIDFromHex(postID)
 	if err != nil {
 		return nil, err
 	}
+
 	var post models.Post
 	filter := bson.D{
 		{"_id", pID},
@@ -289,12 +285,13 @@ func (ps *PostsService) postExists(postID string) (*models.Post, error) {
 	return &post, nil
 }
 
-// If comment exists, returns comment as a Comment model.
+// If comment exists, returns comment as a Comment struct.
 func (ps *PostsService) commentExists(commentID string) (*models.Comment, error) {
 	cID, err := primitive.ObjectIDFromHex(commentID)
 	if err != nil {
 		return nil, err
 	}
+
 	var comment models.Comment
 	filter := bson.D{
 		{"_id", cID},
