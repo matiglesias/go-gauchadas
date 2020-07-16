@@ -51,6 +51,9 @@ func (ps *PostsService) Create(data []byte) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	if p.DeletedAt != 0 || p.UpdatedAt != 0 {
+		return nil, errors.New("request have an unespected date field")
+	}
 	p.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
 
 	insertResult, err := ps.postsCollection.InsertOne(context.TODO(), p)
@@ -92,6 +95,9 @@ func (ps *PostsService) Edit(data []byte, postID string) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	if p.DeletedAt != 0 || p.UpdatedAt != 0 || p.CreatedAt != 0 {
+		return nil, errors.New("request have an unespected date field")
+	}
 
 	update := bson.D{
 		{"$set", p},
@@ -99,9 +105,7 @@ func (ps *PostsService) Edit(data []byte, postID string) (interface{}, error) {
 			{"updatedAt", true},
 		}},
 	}
-	filter := bson.D{
-		{"_id", post.ID},
-	}
+	filter := bson.D{{"_id", post.ID}}
 	updateResult, err := ps.postsCollection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		return nil, err
@@ -145,12 +149,10 @@ func (ps *PostsService) CreateMainComment(data []byte, postID string) (interface
 	if err != nil {
 		return nil, err
 	}
-	/* 	// ¡OJO! PODRIAN MANDAR JASON CON deletedAt U OTRO CAMPO, Y HARIA CAGADAS. WENO
-	   	// AUNQ SERIA MAS IMPORTANTE EN EDITAR COMENTARIO JEP
-	   	zeroTime := time.Unix(0, 0)
-	   	if  !c.DeletedAt.Time().Equal(zeroTime) {
-	   		return
-	   	} */
+	if c.DeletedAt != 0 || c.UpdatedAt != 0 {
+		return nil, errors.New("request have an unespected date field")
+	}
+
 	c.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
 	c.PostID = post.ID
 
@@ -183,7 +185,10 @@ func (ps *PostsService) CreateSecondaryComment(data []byte, postID string, mainC
 	if err != nil {
 		return nil, err
 	}
-	// ¡OJO! PODRIAN MANDAR JASON CON deletedAt U OTRO CAMPO, Y HARIA CAGADAS.
+	if c.DeletedAt != 0 || c.UpdatedAt != 0 {
+		return nil, errors.New("request have an unespected date field")
+	}
+
 	c.CreatedAt = primitive.NewDateTimeFromTime(time.Now())
 	c.PostID = post.ID
 	c.CommentID = mainComment.ID
@@ -211,6 +216,9 @@ func (ps *PostsService) EditComment(data []byte, postID string, commentID string
 	if err != nil {
 		return nil, err
 	}
+	if c.DeletedAt != 0 || c.UpdatedAt != 0 || c.CreatedAt != 0 {
+		return nil, errors.New("request have an unespected date field")
+	}
 
 	update := bson.D{
 		{"$set", c},
@@ -218,9 +226,7 @@ func (ps *PostsService) EditComment(data []byte, postID string, commentID string
 			{"updatedAt", true},
 		}},
 	}
-	filter := bson.D{
-		{"_id", comment.ID},
-	}
+	filter := bson.D{{"_id", comment.ID}}
 	updateResult, err := ps.commentsCollection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		return nil, err
