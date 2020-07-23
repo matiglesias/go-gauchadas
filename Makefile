@@ -17,7 +17,3 @@ clean:
 
 test:
 	go test -v ./...
-
-
-
-
