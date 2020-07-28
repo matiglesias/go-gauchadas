@@ -11,21 +11,16 @@ import (
 	"github.com/gauchadas/api/services"
 
 	"github.com/gorilla/mux"
-	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func main() {
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatalf("Error getting env, not comming through %v", err)
-	}
 
 	ctx := context.TODO()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("DB_HOST")))
 	if err != nil {
-		log.Fatalf("Error getting env, not comming through %v", err)
+		log.Fatalf("Error connecting to database, not coming through %v", err)
 	}
 	defer client.Disconnect(ctx)
 
