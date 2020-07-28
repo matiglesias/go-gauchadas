@@ -21,7 +21,6 @@ func main() {
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(os.Getenv("DB_HOST")))
 	if err != nil {
 		log.Fatalf("Error connecting to database, not coming through %v", err)
-		return
 	}
 	defer client.Disconnect(ctx)
 
