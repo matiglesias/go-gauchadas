@@ -21,8 +21,15 @@ func JSON(endpoint func(r *http.Request) (interface{}, error)) http.HandlerFunc 
 		}
 
 		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.WriteHeader(200)
 		w.Write(jsonResult)
+	}
+}
+
+func CORS(endpoint func(r *http.Request) (interface{}, error)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 	}
 }
 

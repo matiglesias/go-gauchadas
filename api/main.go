@@ -10,6 +10,7 @@ import (
 	"github.com/gauchadas/api/middlewares"
 	"github.com/gauchadas/api/services"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -32,6 +33,10 @@ func main() {
 	postsController := controllers.NewPostsController(postsService)
 
 	router := mux.NewRouter()
+
+	handlers.AllowedHeaders([]string{"X-Requested-With"})
+	handlers.AllowedOrigins([]string{os.Getenv("ORIGIN_ALLOWED")})
+	handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 
 	//Posts routes
 	router.HandleFunc("/api/posts", middlewares.JSON(postsController.GetAll)).Methods("GET")
