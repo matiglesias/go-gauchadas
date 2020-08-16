@@ -8,6 +8,10 @@ import (
 
 func JSON(endpoint func(r *http.Request) (interface{}, error)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain")
+		w.Header().Set("Accept", "*")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+
 		result, err := endpoint(r)
 		if err != nil {
 			handleError(err, w)
@@ -20,7 +24,6 @@ func JSON(endpoint func(r *http.Request) (interface{}, error)) http.HandlerFunc 
 			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(200)
 		w.Write(jsonResult)
 	}
@@ -28,7 +31,6 @@ func JSON(endpoint func(r *http.Request) (interface{}, error)) http.HandlerFunc 
 
 func handleError(err error, w http.ResponseWriter) {
 	log.Println(err)
-	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(400)
 	w.Write([]byte(err.Error()))
 }

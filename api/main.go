@@ -35,18 +35,21 @@ func main() {
 
 	//Posts routes
 	router.HandleFunc("/api/posts", middlewares.JSON(postsController.GetAll)).Methods("GET")
-	router.HandleFunc("/api/posts", middlewares.JSON(postsController.Create)).Methods("POST")
+	router.HandleFunc("/api/posts", middlewares.JSON(postsController.Create)).Methods("POST", "OPTIONS")
 
 	router.HandleFunc("/api/posts/{id}", middlewares.JSON(postsController.GetByID)).Methods("GET")
-	router.HandleFunc("/api/posts/{id}", middlewares.JSON(postsController.Edit)).Methods("PUT")
-	router.HandleFunc("/api/posts/{id}", middlewares.JSON(postsController.Delete)).Methods("DELETE")
+	router.HandleFunc("/api/posts/{id}", middlewares.JSON(postsController.Edit)).Methods("PUT", "OPTIONS")
+	router.HandleFunc("/api/posts/{id}", middlewares.JSON(postsController.Delete)).Methods("DELETE", "OPTIONS")
 
 	router.HandleFunc("/api/posts/{id}/comments", middlewares.JSON(postsController.GetComments)).Methods("GET")
-	router.HandleFunc("/api/posts/{id}/comments", middlewares.JSON(postsController.CreateMainComment)).Methods("POST")
+	router.HandleFunc("/api/posts/{id}/comments", middlewares.JSON(postsController.CreateMainComment)).Methods("POST", "OPTIONS")
 
-	router.HandleFunc("/api/posts/{id}/comments/{commentID}", middlewares.JSON(postsController.CreateSecondaryComment)).Methods("POST")
-	router.HandleFunc("/api/posts/{id}/comments/{commentID}", middlewares.JSON(postsController.EditComment)).Methods("PUT")
-	router.HandleFunc("/api/posts/{id}/comments/{commentID}", middlewares.JSON(postsController.DeleteComment)).Methods("DELETE")
+	router.HandleFunc("/api/posts/{id}/comments/{commentID}", middlewares.JSON(postsController.GetCommentResponses)).Methods("GET")
+	router.HandleFunc("/api/posts/{id}/comments/{commentID}", middlewares.JSON(postsController.CreateSecondaryComment)).Methods("POST", "OPTIONS")
+	router.HandleFunc("/api/posts/{id}/comments/{commentID}", middlewares.JSON(postsController.EditComment)).Methods("PUT", "OPTIONS")
+	router.HandleFunc("/api/posts/{id}/comments/{commentID}", middlewares.JSON(postsController.DeleteComment)).Methods("DELETE", "OPTIONS")
+
+	router.Use(mux.CORSMethodMiddleware(router))
 
 	log.Printf("Listening server at *:8080...\n")
 	http.ListenAndServe(":8080", router)
