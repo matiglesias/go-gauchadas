@@ -10,7 +10,6 @@ import (
 	"github.com/gauchadas/api/middlewares"
 	"github.com/gauchadas/api/services"
 
-	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -34,24 +33,23 @@ func main() {
 
 	router := mux.NewRouter()
 
-	handlers.AllowedHeaders([]string{"X-Requested-With"})
-	handlers.AllowedOrigins([]string{os.Getenv("ORIGIN_ALLOWED")})
-	handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
-
 	//Posts routes
 	router.HandleFunc("/api/posts", middlewares.JSON(postsController.GetAll)).Methods("GET")
-	router.HandleFunc("/api/posts", middlewares.JSON(postsController.Create)).Methods("POST")
+	router.HandleFunc("/api/posts", middlewares.JSON(postsController.Create)).Methods("POST", "OPTIONS")
 
 	router.HandleFunc("/api/posts/{id}", middlewares.JSON(postsController.GetByID)).Methods("GET")
-	router.HandleFunc("/api/posts/{id}", middlewares.JSON(postsController.Edit)).Methods("PUT")
-	router.HandleFunc("/api/posts/{id}", middlewares.JSON(postsController.Delete)).Methods("DELETE")
+	router.HandleFunc("/api/posts/{id}", middlewares.JSON(postsController.Edit)).Methods("PUT", "OPTIONS")
+	router.HandleFunc("/api/posts/{id}", middlewares.JSON(postsController.Delete)).Methods("DELETE", "OPTIONS")
 
 	router.HandleFunc("/api/posts/{id}/comments", middlewares.JSON(postsController.GetComments)).Methods("GET")
-	router.HandleFunc("/api/posts/{id}/comments", middlewares.JSON(postsController.CreateMainComment)).Methods("POST")
+	router.HandleFunc("/api/posts/{id}/comments", middlewares.JSON(postsController.CreateMainComment)).Methods("POST", "OPTIONS")
 
-	router.HandleFunc("/api/posts/{id}/comments/{commentID}", middlewares.JSON(postsController.CreateSecondaryComment)).Methods("POST")
-	router.HandleFunc("/api/posts/{id}/comments/{commentID}", middlewares.JSON(postsController.EditComment)).Methods("PUT")
-	router.HandleFunc("/api/posts/{id}/comments/{commentID}", middlewares.JSON(postsController.DeleteComment)).Methods("DELETE")
+	router.HandleFunc("/api/posts/{id}/comments/{commentID}", middlewares.JSON(postsController.GetCommentResponses)).Methods("GET")
+	router.HandleFunc("/api/posts/{id}/comments/{commentID}", middlewares.JSON(postsController.CreateSecondaryComment)).Methods("POST", "OPTIONS")
+	router.HandleFunc("/api/posts/{id}/comments/{commentID}", middlewares.JSON(postsController.EditComment)).Methods("PUT", "OPTIONS")
+	router.HandleFunc("/api/posts/{id}/comments/{commentID}", middlewares.JSON(postsController.DeleteComment)).Methods("DELETE", "OPTIONS")
+
+	router.Use(mux.CORSMethodMiddleware(router))
 
 	log.Printf("Listening server at %s...\n", os.Getenv("SERVER_URL"))
 	http.ListenAndServe(os.Getenv("SERVER_URL"), router)
