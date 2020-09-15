@@ -24,6 +24,7 @@ func NewPostsService(postsCollection *mongo.Collection, commentsCollection *mong
 		commentsCollection: commentsCollection}
 }
 
+// Cambiar todos los bson.D a bson.M, ya que no me importa el orden de los campos.
 func (ps *PostsService) GetAll() (interface{}, error) {
 	ctx := context.TODO()
 	filter := bson.D{
@@ -152,9 +153,8 @@ func (ps *PostsService) GetComments(postID string) (interface{}, error) {
 	ctx := context.TODO()
 	filter := bson.D{
 		{"postID", post.ID},
-		{"deletedAt", bson.D{
-			{"$exists", false},
-		}},
+		{"deletedAt", bson.D{{"$exists", false}}},
+		{"commentID", bson.D{{"$exists", false}}},
 	}
 	cursor, err := ps.commentsCollection.Find(ctx, filter)
 	if err != nil {
@@ -190,7 +190,44 @@ func (ps *PostsService) CreateMainComment(data []byte, postID string) (interface
 	if err != nil {
 		return nil, err
 	}
-	return insertResult, nil
+
+	createdComment := bson.M{
+		"_id":       insertResult.InsertedID.(primitive.ObjectID),
+		"content":   c.Content,
+		"postID":    c.PostID,
+		"createdAt": c.CreatedAt,
+	}
+	return createdComment, nil
+}
+
+func (ps *PostsService) GetCommentResponses(postID string, commentID string) (interface{}, error) {
+	_, err := ps.postExists(postID)
+	if err != nil {
+		return nil, err
+	}
+
+	comment, err := ps.commentExists(commentID)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := context.TODO()
+	filter := bson.D{
+		{"commentID", comment.ID},
+		{"deletedAt", bson.D{{"$exists", false}}},
+	}
+	cursor, err := ps.commentsCollection.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var results []bson.M
+	err = cursor.All(ctx, &results)
+	if err != nil {
+		return nil, err
+	}
+	return results, nil
 }
 
 func (ps *PostsService) CreateSecondaryComment(data []byte, postID string, mainCommentID string) (interface{}, error) {
@@ -222,7 +259,15 @@ func (ps *PostsService) CreateSecondaryComment(data []byte, postID string, mainC
 	if err != nil {
 		return nil, err
 	}
-	return insertResult, nil
+
+	createdResponse := bson.M{
+		"_id":       insertResult.InsertedID.(primitive.ObjectID),
+		"content":   c.Content,
+		"commentID": c.CommentID,
+		"postID":    c.PostID,
+		"createdAt": c.CreatedAt,
+	}
+	return createdResponse, nil
 }
 
 func (ps *PostsService) EditComment(data []byte, postID string, commentID string) (interface{}, error) {
