@@ -62,6 +62,12 @@ func (pc *PostsController) CreateMainComment(r *http.Request) (interface{}, erro
 	return pc.postsService.CreateMainComment(rBody, postID)
 }
 
+func (pc *PostsController) GetCommentResponses(r *http.Request) (interface{}, error) {
+	postID := mux.Vars(r)["id"]
+	commentID := mux.Vars(r)["commentID"]
+	return pc.postsService.GetCommentResponses(postID, commentID)
+}
+
 func (pc *PostsController) CreateSecondaryComment(r *http.Request) (interface{}, error) {
 	rBody, err := ioutil.ReadAll(r.Body)
 	if err != nil {
