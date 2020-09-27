@@ -48,6 +48,6 @@ func main() {
 	router.HandleFunc("/api/posts/{id}/comments/{commentID}", middlewares.JSON(postsController.EditComment)).Methods("PUT")
 	router.HandleFunc("/api/posts/{id}/comments/{commentID}", middlewares.JSON(postsController.DeleteComment)).Methods("DELETE")
 
-	log.Printf("Listening server at %s...\n", os.Getenv("SERVER_URL"))
-	http.ListenAndServe(os.Getenv("SERVER_URL"), router)
+	log.Printf("Listening server at *:8080...\n")
+	http.ListenAndServe(":8080", router)
 }
