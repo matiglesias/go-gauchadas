@@ -8,5 +8,5 @@
 
 ## Getting Started
 
-Run `docker-compose up` to automatically build and run a Docker container for the main application, along with the
+Run `docker-compose up --build -d` to automatically build and run a Docker container for the main application, along with the
 MongoDB database instance.
