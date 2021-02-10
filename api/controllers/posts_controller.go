@@ -48,6 +48,11 @@ func (pc *PostsController) Delete(r *http.Request) (interface{}, error) {
 	return pc.postsService.Delete(postID)
 }
 
+func (pc *PostsController) Restore(r *http.Request) (interface{}, error) {
+	postID := mux.Vars(r)["id"]
+	return pc.postsService.Restore(postID)
+}
+
 func (pc *PostsController) GetComments(r *http.Request) (interface{}, error) {
 	postID := mux.Vars(r)["id"]
 	return pc.postsService.GetComments(postID)

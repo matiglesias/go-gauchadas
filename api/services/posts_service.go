@@ -139,6 +139,33 @@ func (ps *PostsService) Delete(postID string) (interface{}, error) {
 	return "true", nil
 }
 
+func (ps *PostsService) Restore(postID string) (interface{}, error) {
+	post, err := ps.postDeleted(postID)
+	if err != nil {
+		return nil, err
+	}
+
+	update := bson.D{
+		{"$unset", bson.D{
+			{"deletedAt", ""},
+		}},
+	}
+
+	/* TODO: Post owner shouldnt be able to restore soft-deleted comments by comments owners. */
+	filter := bson.D{{"postID", post.ID}}
+	_, err = ps.commentsCollection.UpdateMany(context.TODO(), filter, update)
+	if err != nil {
+		return nil, err
+	}
+
+	filter = bson.D{{"_id", post.ID}}
+	_, err = ps.postsCollection.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		return nil, err
+	}
+	return "true", nil
+}
+
 func (ps *PostsService) GetComments(postID string) (interface{}, error) {
 	post, err := ps.postExists(postID)
 	if err != nil {
@@ -347,6 +374,27 @@ func (ps *PostsService) postExists(postID string) (*models.Post, error) {
 		{"_id", pID},
 		{"deletedAt", bson.D{
 			{"$exists", false},
+		}},
+	}
+	err = ps.postsCollection.FindOne(context.TODO(), filter).Decode(&post)
+	if err != nil {
+		return nil, err
+	}
+	return &post, nil
+}
+
+// If post have been soft-deleted, returns post as a Post struct.
+func (ps *PostsService) postDeleted(postID string) (*models.Post, error) {
+	pID, err := primitive.ObjectIDFromHex(postID)
+	if err != nil {
+		return nil, err
+	}
+
+	var post models.Post
+	filter := bson.D{
+		{"_id", pID},
+		{"deletedAt", bson.D{
+			{"$exists", true},
 		}},
 	}
 	err = ps.postsCollection.FindOne(context.TODO(), filter).Decode(&post)
