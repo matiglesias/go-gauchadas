@@ -126,22 +126,17 @@ func (ps *PostsService) Delete(postID string) (interface{}, error) {
 	}
 
 	filter := bson.D{{"postID", post.ID}}
-	commentsDeleteResult, err := ps.commentsCollection.UpdateMany(context.TODO(), filter, update)
+	_, err = ps.commentsCollection.UpdateMany(context.TODO(), filter, update)
 	if err != nil {
 		return nil, err
 	}
 
 	filter = bson.D{{"_id", post.ID}}
-	postDeleteResult, err := ps.postsCollection.UpdateOne(context.TODO(), filter, update)
+	_, err = ps.postsCollection.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		return nil, err
 	}
-
-	deleteResults := bson.M{
-		"postDeleteResult":     postDeleteResult,
-		"commentsDeleteResult": commentsDeleteResult,
-	}
-	return deleteResults, nil
+	return "true", nil
 }
 
 func (ps *PostsService) GetComments(postID string) (interface{}, error) {
