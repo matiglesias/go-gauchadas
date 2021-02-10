@@ -34,20 +34,26 @@ func main() {
 	router := mux.NewRouter()
 
 	//Posts routes
+
+	router.HandleFunc("/api/posts", middlewares.JSON(nil)).Methods("OPTIONS")
 	router.HandleFunc("/api/posts", middlewares.JSON(postsController.GetAll)).Methods("GET")
-	router.HandleFunc("/api/posts", middlewares.JSON(postsController.Create)).Methods("POST", "OPTIONS")
+	router.HandleFunc("/api/posts", middlewares.JSON(postsController.Create)).Methods("POST")
 
+	router.HandleFunc("/api/posts/{id}", middlewares.JSON(nil)).Methods("OPTIONS")
 	router.HandleFunc("/api/posts/{id}", middlewares.JSON(postsController.GetByID)).Methods("GET")
-	router.HandleFunc("/api/posts/{id}", middlewares.JSON(postsController.Edit)).Methods("PUT", "OPTIONS")
-	router.HandleFunc("/api/posts/{id}", middlewares.JSON(postsController.Delete)).Methods("DELETE", "OPTIONS")
+	router.HandleFunc("/api/posts/{id}", middlewares.JSON(postsController.Restore)).Methods("PUT")
+	router.HandleFunc("/api/posts/{id}", middlewares.JSON(postsController.Edit)).Methods("PATCH")
+	router.HandleFunc("/api/posts/{id}", middlewares.JSON(postsController.Delete)).Methods("DELETE")
 
+	router.HandleFunc("/api/posts/{id}/comments", middlewares.JSON(nil)).Methods("OPTIONS")
 	router.HandleFunc("/api/posts/{id}/comments", middlewares.JSON(postsController.GetComments)).Methods("GET")
-	router.HandleFunc("/api/posts/{id}/comments", middlewares.JSON(postsController.CreateMainComment)).Methods("POST", "OPTIONS")
+	router.HandleFunc("/api/posts/{id}/comments", middlewares.JSON(postsController.CreateMainComment)).Methods("POST")
 
+	router.HandleFunc("/api/posts/{id}/comments/{commentID}", middlewares.JSON(nil)).Methods("OPTIONS")
 	router.HandleFunc("/api/posts/{id}/comments/{commentID}", middlewares.JSON(postsController.GetCommentResponses)).Methods("GET")
-	router.HandleFunc("/api/posts/{id}/comments/{commentID}", middlewares.JSON(postsController.CreateSecondaryComment)).Methods("POST", "OPTIONS")
-	router.HandleFunc("/api/posts/{id}/comments/{commentID}", middlewares.JSON(postsController.EditComment)).Methods("PUT", "OPTIONS")
-	router.HandleFunc("/api/posts/{id}/comments/{commentID}", middlewares.JSON(postsController.DeleteComment)).Methods("DELETE", "OPTIONS")
+	router.HandleFunc("/api/posts/{id}/comments/{commentID}", middlewares.JSON(postsController.CreateSecondaryComment)).Methods("POST")
+	router.HandleFunc("/api/posts/{id}/comments/{commentID}", middlewares.JSON(postsController.EditComment)).Methods("PATCH")
+	router.HandleFunc("/api/posts/{id}/comments/{commentID}", middlewares.JSON(postsController.DeleteComment)).Methods("DELETE")
 
 	router.Use(mux.CORSMethodMiddleware(router))
 
